@@ -136,42 +136,6 @@ class _LocaltionInfo extends State<LocationInfo> {
     }
   }
 
-  final List<Forecast> ssaForecast = [
-    Forecast(
-      '22/03/2021',
-      null,
-      [
-        ForecastData("icon", "22", "32"),
-        ForecastData("icon", "23", "33"),
-        ForecastData("icon", "24", "34"),
-      ],
-    ),
-    Forecast(
-      '23/03/2021',
-      null,
-      [
-        ForecastData("icon", "25", "35"),
-        ForecastData("icon", "26", "36"),
-        ForecastData("icon", "27", "37"),
-      ],
-    ),
-    Forecast(
-      '24/03/2021',
-      ForecastData("icon", "28", "38"),
-      null,
-    ),
-    Forecast(
-      '25/03/2021',
-      ForecastData("icon", "29", "39"),
-      null,
-    ),
-    Forecast(
-      '26/03/2021',
-      ForecastData("icon", "30", "40"),
-      null,
-    ),
-  ];
-
   _LocaltionInfo() : super();
 
   @override
@@ -263,56 +227,6 @@ class _LocaltionInfo extends State<LocationInfo> {
             ),
           );
         });
-
-    // return FutureBuilder<List<StateBr>>(
-    //   future: futureState,
-    //   builder: (context, snapshot) {
-    //     if (snapshot.hasData) {
-    //       return Expanded(
-    //         child: SizedBox(
-    //           height: 200.0,
-    //           child: ListView.builder(
-    //               padding: EdgeInsets.all(8),
-    //               itemCount: snapshot.data.length,
-    //               itemBuilder: (BuildContext context, int index) {
-    //                 return Card(
-    //                   child: Column(
-    //                     children: [
-    //                       if (index == 0)
-    //                         DropdownButtonFormField(
-    //                           decoration: InputDecoration(
-    //                             labelText: 'State',
-    //                           ),
-    //                           value: selectedState.id,
-    //                           items: states
-    //                               .map((e) => DropdownMenuItem(
-    //                                     key: Key(e.id.toString()),
-    //                                     child: Text(e.name),
-    //                                     value: e.id,
-    //                                   ))
-    //                               .toList(),
-    //                           onChanged: (value) {
-    //                             debugPrint(value.toString());
-    //                           },
-    //                         ),
-    //                       ListTile(
-    //                         title: Text(snapshot.data[index].id.toString()),
-    //                         subtitle: Text(snapshot.data[index].initials),
-    //                         trailing: Text(snapshot.data[index].name),
-    //                       )
-    //                     ],
-    //                   ),
-    //                 );
-    //               }),
-    //         ),
-    //       );
-    //     } else if (snapshot.hasError) {
-    //       return Text("${snapshot.error}");
-    //     }
-    //     // By default, show a loading spinner.
-    //     return CircularProgressIndicator();
-    //   },
-    // );
 
     // return Column(
     //   children: [
@@ -475,22 +389,4 @@ class WeatherForecast {
   String toString() {
     return "dayShift: $dayShift tempMin: $tempMin tempMax: $tempMax tempUnit: $tempUnit";
   }
-}
-
-class Forecast {
-  final String date;
-  final ForecastData dayLongForecastData;
-  final List<ForecastData> dayShiftForecastData;
-
-  Forecast(this.date, this.dayLongForecastData, this.dayShiftForecastData);
-}
-
-class ForecastData {
-  final String iconFinal =
-      "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnUlEQVR42u3RAQ0AAAgDoNu/mp20hnNQgUqmwxklRAhChCBECEKEIESIECEIEYIQIQgRghAhCEGIEIQIQYgQhAhBCEKEIEQIQoQgRAhCECIEIUIQIgQhQhCCECEIEYIQIQgRghCECEGIEIQIQYgQhCBECEKEIEQIQoQgBCFCECIEIUIQIgQhCBGCECEIEYIQIQgRIkQIQoQgRAhCvltdsbOxjRgSSAAAAABJRU5ErkJggg==";
-  final String icon;
-  final String tempMin;
-  final String tempMax;
-
-  ForecastData(this.icon, this.tempMin, this.tempMax);
 }

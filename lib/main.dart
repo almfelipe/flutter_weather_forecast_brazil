@@ -29,9 +29,11 @@ class _LocaltionInfo extends State<LocationInfo> {
   CityBr selectedCity;
   List<StateBr> states = [];
   List<CityBr> cities = [];
+  List<WeatherForecast> forecasts = [];
 
   Future<List<StateBr>> futureStates;
   Future<List<CityBr>> futureCities;
+  Future<List<WeatherForecast>> futureForecasts;
 
   @override
   void initState() {
@@ -40,8 +42,11 @@ class _LocaltionInfo extends State<LocationInfo> {
   }
 
   Future<List<StateBr>> fetchStates() async {
-    final response = await http.get(
-        Uri.https("servicodados.ibge.gov.br", "api/v1/localidades/estados"));
+    final response = await http.get(Uri.https(
+      "servicodados.ibge.gov.br",
+      "api/v1/localidades/estados",
+      {"orderBy": "nome"},
+    ));
 
     if (response.statusCode == 200) {
       List<dynamic> jsonList = jsonDecode(response.body);
@@ -65,8 +70,10 @@ class _LocaltionInfo extends State<LocationInfo> {
   }
 
   Future<List<CityBr>> fetchCities(int idStateBr) async {
-    final response = await http.get(Uri.https("servicodados.ibge.gov.br",
-        "api/v1/localidades/estados/" + idStateBr.toString() + "/municipios"));
+    final response = await http.get(Uri.https(
+        "servicodados.ibge.gov.br",
+        "api/v1/localidades/estados/" + idStateBr.toString() + "/municipios",
+        {"orderBy": "nome"}));
 
     if (response.statusCode == 200) {
       List<dynamic> jsonList = jsonDecode(response.body);
@@ -81,23 +88,53 @@ class _LocaltionInfo extends State<LocationInfo> {
         selectedCity = cityList[0];
       });
 
+      futureForecasts = fetchForecasts(selectedCity.id);
+
       return cityList;
     } else {
       throw Exception('Failed to load');
     }
   }
 
-  //https://servicodados.ibge.gov.br/api/v1/localidades/estados/29/municipios
+  Future<List<WeatherForecast>> fetchForecasts(int idCity) async {
+    final response = await http.get(Uri.https(
+      "apiprevmet3.inmet.gov.br",
+      "previsao/" + idCity.toString(),
+    ));
 
-  // final List<CityBr> citiesBA = [
-  //   CityBr(2927408, 'Salvador'),
-  //   CityBr(2921708, 'Morro do Chapéu'),
-  // ];
+    if (response.statusCode == 200) {
+      List<WeatherForecast> forecastList = [];
+      Map<String, dynamic> json = jsonDecode(response.body);
 
-  // final List<CityBr> citiesPE = [
-  //   CityBr(2611606, 'Recife'),
-  //   CityBr(2611101, 'Petrolina'),
-  // ];
+      for (var i = 0; i < 3; i++) {
+        Map<String, dynamic> fcjson =
+            json.values.toList()[0].values.toList()[0].values.toList()[i];
+        WeatherForecast wfc = WeatherForecast.fromJson(fcjson);
+
+        switch (i) {
+          case 0:
+            wfc.dayShift = "Morning";
+            break;
+          case 1:
+            wfc.dayShift = "Afternoon";
+            break;
+          case 2:
+            wfc.dayShift = "Night";
+            break;
+        }
+
+        forecastList.add(wfc);
+      }
+
+      setState(() {
+        forecasts = forecastList;
+      });
+
+      return forecastList;
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
 
   final List<Forecast> ssaForecast = [
     Forecast(
@@ -139,8 +176,8 @@ class _LocaltionInfo extends State<LocationInfo> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<CityBr>>(
-        future: futureCities,
+    return FutureBuilder<List<WeatherForecast>>(
+        future: futureForecasts,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Padding(
@@ -161,7 +198,6 @@ class _LocaltionInfo extends State<LocationInfo> {
                         .toList(),
                     onChanged: (value) {
                       futureCities = fetchCities(value);
-                      debugPrint(value.toString());
                     },
                   ),
                   DropdownButtonFormField(
@@ -177,8 +213,39 @@ class _LocaltionInfo extends State<LocationInfo> {
                             ))
                         .toList(),
                     onChanged: (value) {
-                      debugPrint(value.toString());
+                      futureForecasts = fetchForecasts(value);
                     },
+                  ),
+                  Expanded(
+                    child: SizedBox(
+                      height: 200.0,
+                      child: ListView.builder(
+                          padding: EdgeInsets.all(8),
+                          itemCount: snapshot.data.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Card(
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    title: Text(snapshot.data[index].dayShift),
+                                    subtitle: Text(snapshot.data[index].tempMin
+                                            .toString() +
+                                        "-" +
+                                        snapshot.data[index].tempMax
+                                            .toString() +
+                                        " " +
+                                        snapshot.data[index].tempUnit),
+                                    leading: Image.memory(
+                                      base64.decode(
+                                          snapshot.data[index].iconBase64),
+                                      fit: BoxFit.contain,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            );
+                          }),
+                    ),
                   ),
                 ],
               ),
@@ -384,6 +451,29 @@ class CityBr {
       id: json['id'],
       name: json['nome'],
     );
+  }
+}
+
+class WeatherForecast {
+  String dayShift;
+  final String iconBase64;
+  final int tempMin;
+  final int tempMax;
+  final String tempUnit = "ºC";
+
+  WeatherForecast({this.dayShift, this.iconBase64, this.tempMin, this.tempMax});
+
+  factory WeatherForecast.fromJson(Map<String, dynamic> json) {
+    return WeatherForecast(
+      tempMin: json['temp_min'],
+      tempMax: json['temp_max'],
+      iconBase64: json['icone'].replaceAll('data:image/png;base64,', ''),
+    );
+  }
+
+  @override
+  String toString() {
+    return "dayShift: $dayShift tempMin: $tempMin tempMax: $tempMax tempUnit: $tempUnit";
   }
 }
 

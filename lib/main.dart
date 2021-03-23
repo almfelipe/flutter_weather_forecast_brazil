@@ -119,10 +119,6 @@ class LocationInfo extends StatelessWidget {
           child: Column(
             children: [
               ListTile(
-                // leading: Image.memory(
-                //   base64.decode(salvadorForecast
-                //       .first.dayShiftForecastData.first.iconFinal),
-                // ),
                 title: Text("Monday"),
                 subtitle: Text("22nd March 2021, Salvador - BA"),
               ),

@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 
@@ -13,35 +13,91 @@ class WeatherForecastBrazil extends StatelessWidget {
         appBar: AppBar(
           title: Text('flutter_weather_forecast_brazil'),
         ),
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            children: [LocationInfo()],
-          ),
-        ),
+        body: LocationInfo(),
       ),
     );
   }
 }
 
-class LocationInfo extends StatelessWidget {
-  final State selectedState = State(29, 'BA', 'Bahia');
-  final City selectedCity = City(2927408, 'Salvador');
+class LocationInfo extends StatefulWidget {
+  @override
+  _LocaltionInfo createState() => _LocaltionInfo();
+}
 
-  final List<State> states = [
-    State(29, 'BA', 'Bahia'),
-    State(26, 'PE', 'Pernambuco'),
-  ];
+class _LocaltionInfo extends State<LocationInfo> {
+  StateBr selectedState;
+  CityBr selectedCity;
+  List<StateBr> states = [];
+  List<CityBr> cities = [];
 
-  final List<City> citiesBA = [
-    City(2927408, 'Salvador'),
-    City(2921708, 'Morro do Chapéu'),
-  ];
+  Future<List<StateBr>> futureStates;
+  Future<List<CityBr>> futureCities;
 
-  final List<City> citiesPE = [
-    City(2611606, 'Recife'),
-    City(2611101, 'Petrolina'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    futureStates = fetchStates();
+  }
+
+  Future<List<StateBr>> fetchStates() async {
+    final response = await http.get(
+        Uri.https("servicodados.ibge.gov.br", "api/v1/localidades/estados"));
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      List<StateBr> stateList = [];
+
+      jsonList.forEach((element) {
+        stateList.add(StateBr.fromJson(element));
+      });
+
+      setState(() {
+        states = stateList;
+        selectedState = stateList[0];
+      });
+
+      futureCities = fetchCities(selectedState.id);
+
+      return stateList;
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  Future<List<CityBr>> fetchCities(int idStateBr) async {
+    final response = await http.get(Uri.https("servicodados.ibge.gov.br",
+        "api/v1/localidades/estados/" + idStateBr.toString() + "/municipios"));
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      List<CityBr> cityList = [];
+
+      jsonList.forEach((element) {
+        cityList.add(CityBr.fromJson(element));
+      });
+
+      setState(() {
+        cities = cityList;
+        selectedCity = cityList[0];
+      });
+
+      return cityList;
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  //https://servicodados.ibge.gov.br/api/v1/localidades/estados/29/municipios
+
+  // final List<CityBr> citiesBA = [
+  //   CityBr(2927408, 'Salvador'),
+  //   CityBr(2921708, 'Morro do Chapéu'),
+  // ];
+
+  // final List<CityBr> citiesPE = [
+  //   CityBr(2611606, 'Recife'),
+  //   CityBr(2611101, 'Petrolina'),
+  // ];
 
   final List<Forecast> ssaForecast = [
     Forecast(
@@ -79,83 +135,203 @@ class LocationInfo extends StatelessWidget {
     ),
   ];
 
+  _LocaltionInfo() : super();
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        DropdownButtonFormField(
-          decoration: InputDecoration(
-            labelText: 'State',
-          ),
-          value: selectedState.id,
-          items: states
-              .map((e) => DropdownMenuItem(
-                    key: Key(e.id.toString()),
-                    child: Text(e.name),
-                    value: e.id,
-                  ))
-              .toList(),
-          onChanged: (value) {
-            debugPrint(value.toString());
-          },
-        ),
-        DropdownButtonFormField(
-          decoration: InputDecoration(
-            labelText: 'City',
-          ),
-          value: selectedCity.id,
-          items: citiesBA
-              .map((e) => DropdownMenuItem(
-                    key: Key(e.id.toString()),
-                    child: Text(e.name),
-                    value: e.id,
-                  ))
-              .toList(),
-          onChanged: (value) {
-            debugPrint(value.toString());
-          },
-        ),
-        Card(
-          child: Column(
-            children: [
-              ListTile(
-                title: Text("Monday"),
-                subtitle: Text("22nd March 2021, Salvador - BA"),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return FutureBuilder<List<CityBr>>(
+        future: futureCities,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
                 children: [
-                  Column(children: [
-                    ForecastBigLayout(
-                      'Morning',
-                      ssaForecast.first.dayShiftForecastData.first.iconFinal,
-                      ssaForecast.first.dayShiftForecastData.first.tempMin,
-                      ssaForecast.first.dayShiftForecastData.first.tempMax,
+                  DropdownButtonFormField(
+                    decoration: InputDecoration(
+                      labelText: 'State',
                     ),
-                  ]),
-                  Column(children: [
-                    ForecastBigLayout(
-                      'Afternoon',
-                      ssaForecast.first.dayShiftForecastData.first.iconFinal,
-                      ssaForecast.first.dayShiftForecastData.first.tempMin,
-                      ssaForecast.first.dayShiftForecastData.first.tempMax,
+                    value: selectedState.id,
+                    items: states
+                        .map((e) => DropdownMenuItem(
+                              key: Key(e.id.toString()),
+                              child: Text(e.name),
+                              value: e.id,
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      futureCities = fetchCities(value);
+                      debugPrint(value.toString());
+                    },
+                  ),
+                  DropdownButtonFormField(
+                    decoration: InputDecoration(
+                      labelText: 'City',
                     ),
-                  ]),
-                  Column(children: [
-                    ForecastBigLayout(
-                      'Night',
-                      ssaForecast.first.dayShiftForecastData.first.iconFinal,
-                      ssaForecast.first.dayShiftForecastData.first.tempMin,
-                      ssaForecast.first.dayShiftForecastData.first.tempMax,
-                    ),
-                  ]),
+                    value: selectedCity.id,
+                    items: cities
+                        .map((e) => DropdownMenuItem(
+                              key: Key(e.id.toString()),
+                              child: Text(e.name),
+                              value: e.id,
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      debugPrint(value.toString());
+                    },
+                  ),
                 ],
-              )
-            ],
-          ),
-        )
-      ],
-    );
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Text("Failed to load");
+          }
+
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+              ],
+            ),
+          );
+        });
+
+    // return FutureBuilder<List<StateBr>>(
+    //   future: futureState,
+    //   builder: (context, snapshot) {
+    //     if (snapshot.hasData) {
+    //       return Expanded(
+    //         child: SizedBox(
+    //           height: 200.0,
+    //           child: ListView.builder(
+    //               padding: EdgeInsets.all(8),
+    //               itemCount: snapshot.data.length,
+    //               itemBuilder: (BuildContext context, int index) {
+    //                 return Card(
+    //                   child: Column(
+    //                     children: [
+    //                       if (index == 0)
+    //                         DropdownButtonFormField(
+    //                           decoration: InputDecoration(
+    //                             labelText: 'State',
+    //                           ),
+    //                           value: selectedState.id,
+    //                           items: states
+    //                               .map((e) => DropdownMenuItem(
+    //                                     key: Key(e.id.toString()),
+    //                                     child: Text(e.name),
+    //                                     value: e.id,
+    //                                   ))
+    //                               .toList(),
+    //                           onChanged: (value) {
+    //                             debugPrint(value.toString());
+    //                           },
+    //                         ),
+    //                       ListTile(
+    //                         title: Text(snapshot.data[index].id.toString()),
+    //                         subtitle: Text(snapshot.data[index].initials),
+    //                         trailing: Text(snapshot.data[index].name),
+    //                       )
+    //                     ],
+    //                   ),
+    //                 );
+    //               }),
+    //         ),
+    //       );
+    //     } else if (snapshot.hasError) {
+    //       return Text("${snapshot.error}");
+    //     }
+    //     // By default, show a loading spinner.
+    //     return CircularProgressIndicator();
+    //   },
+    // );
+
+    // return Column(
+    //   children: [
+    //     DropdownButtonFormField(
+    //       decoration: InputDecoration(
+    //         labelText: 'State',
+    //       ),
+    //       value: selectedState.id,
+    //       items: states
+    //           .map((e) => DropdownMenuItem(
+    //                 key: Key(e.id.toString()),
+    //                 child: Text(e.name),
+    //                 value: e.id,
+    //               ))
+    //           .toList(),
+    //       onChanged: (value) {
+    //         debugPrint(value.toString());
+    //       },
+    //     ),
+    //     DropdownButtonFormField(
+    //       decoration: InputDecoration(
+    //         labelText: 'City',
+    //       ),
+    //       value: selectedCity.id,
+    //       items: citiesBA
+    //           .map((e) => DropdownMenuItem(
+    //                 key: Key(e.id.toString()),
+    //                 child: Text(e.name),
+    //                 value: e.id,
+    //               ))
+    //           .toList(),
+    //       onChanged: (value) {
+    //         debugPrint(value.toString());
+    //       },
+    //     ),
+    //     Padding(
+    //       padding: EdgeInsets.only(top: 16.0, bottom: 16.0),
+    //       child: Card(
+    //         clipBehavior: Clip.antiAlias,
+    //         child: Column(
+    //           children: [
+    //             ListTile(
+    //               title: Text("Monday"),
+    //               subtitle: Text("22nd March 2021, Salvador - BA"),
+    //             ),
+    //             Padding(
+    //               padding: EdgeInsets.only(top: 16.0, bottom: 24.0),
+    //               child: Row(
+    //                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    //                 children: [
+    //                   Column(children: [
+    //                     ForecastBigLayout(
+    //                       'Morning',
+    //                       ssaForecast
+    //                           .first.dayShiftForecastData.first.iconFinal,
+    //                       ssaForecast.first.dayShiftForecastData.first.tempMin,
+    //                       ssaForecast.first.dayShiftForecastData.first.tempMax,
+    //                     ),
+    //                   ]),
+    //                   Column(children: [
+    //                     ForecastBigLayout(
+    //                       'Afternoon',
+    //                       ssaForecast
+    //                           .first.dayShiftForecastData.first.iconFinal,
+    //                       ssaForecast.first.dayShiftForecastData.first.tempMin,
+    //                       ssaForecast.first.dayShiftForecastData.first.tempMax,
+    //                     ),
+    //                   ]),
+    //                   Column(children: [
+    //                     ForecastBigLayout(
+    //                       'Night',
+    //                       ssaForecast
+    //                           .first.dayShiftForecastData.first.iconFinal,
+    //                       ssaForecast.first.dayShiftForecastData.first.tempMin,
+    //                       ssaForecast.first.dayShiftForecastData.first.tempMax,
+    //                     ),
+    //                   ]),
+    //                 ],
+    //               ),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     ),
+    //   ],
+    // );
   }
 }
 
@@ -174,49 +350,41 @@ class ForecastBigLayout extends StatelessWidget {
       Text(this.dayShift),
       Image.memory(
         base64.decode(this.iconBase64),
+        fit: BoxFit.contain,
       ),
       Text(this.tempMin + ' - ' + this.tempMax + ' ' + this.tempUnit),
     ]);
   }
 }
 
-class ForecastSmallLayout extends StatelessWidget {
-  final String dayOfTheWeek;
-  final String dayShift;
-  final String iconBase64;
-  final String tempMin;
-  final String tempMax;
-  final String tempUnit = "ºC";
-
-  ForecastSmallLayout(this.dayOfTheWeek, this.dayShift, this.iconBase64,
-      this.tempMin, this.tempMax);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      Text(this.dayOfTheWeek),
-      Text(this.dayShift),
-      Image.memory(
-        base64.decode(this.iconBase64),
-      ),
-      Text(this.tempMin + ' - ' + this.tempMax + ' ' + this.tempUnit),
-    ]);
-  }
-}
-
-class State {
+class StateBr {
   final int id;
   final String initials;
   final String name;
 
-  State(this.id, this.initials, this.name);
+  StateBr({this.id, this.initials, this.name});
+
+  factory StateBr.fromJson(Map<String, dynamic> json) {
+    return StateBr(
+      id: json['id'],
+      initials: json['sigla'],
+      name: json['nome'],
+    );
+  }
 }
 
-class City {
+class CityBr {
   final int id;
   final String name;
 
-  City(this.id, this.name);
+  CityBr({this.id, this.name});
+
+  factory CityBr.fromJson(Map<String, dynamic> json) {
+    return CityBr(
+      id: json['id'],
+      name: json['nome'],
+    );
+  }
 }
 
 class Forecast {

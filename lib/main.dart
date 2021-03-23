@@ -1,113 +1,242 @@
+import 'dart:typed_data';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(WeatherForecastBrazil());
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class WeatherForecastBrazil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('flutter_weather_forecast_brazil'),
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            children: [LocationInfo()],
+          ),
+        ),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class LocationInfo extends StatelessWidget {
+  final State selectedState = State(29, 'BA', 'Bahia');
+  final City selectedCity = City(2927408, 'Salvador');
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  final List<State> states = [
+    State(29, 'BA', 'Bahia'),
+    State(26, 'PE', 'Pernambuco'),
+  ];
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  final List<City> citiesBA = [
+    City(2927408, 'Salvador'),
+    City(2921708, 'Morro do Chapéu'),
+  ];
 
-  final String title;
+  final List<City> citiesPE = [
+    City(2611606, 'Recife'),
+    City(2611101, 'Petrolina'),
+  ];
 
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final List<Forecast> ssaForecast = [
+    Forecast(
+      '22/03/2021',
+      null,
+      [
+        ForecastData("icon", "22", "32"),
+        ForecastData("icon", "23", "33"),
+        ForecastData("icon", "24", "34"),
+      ],
+    ),
+    Forecast(
+      '23/03/2021',
+      null,
+      [
+        ForecastData("icon", "25", "35"),
+        ForecastData("icon", "26", "36"),
+        ForecastData("icon", "27", "37"),
+      ],
+    ),
+    Forecast(
+      '24/03/2021',
+      ForecastData("icon", "28", "38"),
+      null,
+    ),
+    Forecast(
+      '25/03/2021',
+      ForecastData("icon", "29", "39"),
+      null,
+    ),
+    Forecast(
+      '26/03/2021',
+      ForecastData("icon", "30", "40"),
+      null,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+    return Column(
+      children: [
+        DropdownButtonFormField(
+          decoration: InputDecoration(
+            labelText: 'State',
+          ),
+          value: selectedState.id,
+          items: states
+              .map((e) => DropdownMenuItem(
+                    key: Key(e.id.toString()),
+                    child: Text(e.name),
+                    value: e.id,
+                  ))
+              .toList(),
+          onChanged: (value) {
+            debugPrint(value.toString());
+          },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        DropdownButtonFormField(
+          decoration: InputDecoration(
+            labelText: 'City',
+          ),
+          value: selectedCity.id,
+          items: citiesBA
+              .map((e) => DropdownMenuItem(
+                    key: Key(e.id.toString()),
+                    child: Text(e.name),
+                    value: e.id,
+                  ))
+              .toList(),
+          onChanged: (value) {
+            debugPrint(value.toString());
+          },
+        ),
+        Card(
+          child: Column(
+            children: [
+              ListTile(
+                // leading: Image.memory(
+                //   base64.decode(salvadorForecast
+                //       .first.dayShiftForecastData.first.iconFinal),
+                // ),
+                title: Text("Monday"),
+                subtitle: Text("22nd March 2021, Salvador - BA"),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(children: [
+                    ForecastBigLayout(
+                      'Morning',
+                      ssaForecast.first.dayShiftForecastData.first.iconFinal,
+                      ssaForecast.first.dayShiftForecastData.first.tempMin,
+                      ssaForecast.first.dayShiftForecastData.first.tempMax,
+                    ),
+                  ]),
+                  Column(children: [
+                    ForecastBigLayout(
+                      'Afternoon',
+                      ssaForecast.first.dayShiftForecastData.first.iconFinal,
+                      ssaForecast.first.dayShiftForecastData.first.tempMin,
+                      ssaForecast.first.dayShiftForecastData.first.tempMax,
+                    ),
+                  ]),
+                  Column(children: [
+                    ForecastBigLayout(
+                      'Night',
+                      ssaForecast.first.dayShiftForecastData.first.iconFinal,
+                      ssaForecast.first.dayShiftForecastData.first.tempMin,
+                      ssaForecast.first.dayShiftForecastData.first.tempMax,
+                    ),
+                  ]),
+                ],
+              )
+            ],
+          ),
+        )
+      ],
     );
   }
+}
+
+class ForecastBigLayout extends StatelessWidget {
+  final String dayShift;
+  final String iconBase64;
+  final String tempMin;
+  final String tempMax;
+  final String tempUnit = "ºC";
+
+  ForecastBigLayout(this.dayShift, this.iconBase64, this.tempMin, this.tempMax);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Text(this.dayShift),
+      Image.memory(
+        base64.decode(this.iconBase64),
+      ),
+      Text(this.tempMin + ' - ' + this.tempMax + ' ' + this.tempUnit),
+    ]);
+  }
+}
+
+class ForecastSmallLayout extends StatelessWidget {
+  final String dayOfTheWeek;
+  final String dayShift;
+  final String iconBase64;
+  final String tempMin;
+  final String tempMax;
+  final String tempUnit = "ºC";
+
+  ForecastSmallLayout(this.dayOfTheWeek, this.dayShift, this.iconBase64,
+      this.tempMin, this.tempMax);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Text(this.dayOfTheWeek),
+      Text(this.dayShift),
+      Image.memory(
+        base64.decode(this.iconBase64),
+      ),
+      Text(this.tempMin + ' - ' + this.tempMax + ' ' + this.tempUnit),
+    ]);
+  }
+}
+
+class State {
+  final int id;
+  final String initials;
+  final String name;
+
+  State(this.id, this.initials, this.name);
+}
+
+class City {
+  final int id;
+  final String name;
+
+  City(this.id, this.name);
+}
+
+class Forecast {
+  final String date;
+  final ForecastData dayLongForecastData;
+  final List<ForecastData> dayShiftForecastData;
+
+  Forecast(this.date, this.dayLongForecastData, this.dayShiftForecastData);
+}
+
+class ForecastData {
+  final String iconFinal =
+      "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAnUlEQVR42u3RAQ0AAAgDoNu/mp20hnNQgUqmwxklRAhChCBECEKEIESIECEIEYIQIQgRghAhCEGIEIQIQYgQhAhBCEKEIEQIQoQgRAhCECIEIUIQIgQhQhCCECEIEYIQIQgRghCECEGIEIQIQYgQhCBECEKEIEQIQoQgBCFCECIEIUIQIgQhCBGCECEIEYIQIQgRIkQIQoQgRAhCvltdsbOxjRgSSAAAAABJRU5ErkJggg==";
+  final String icon;
+  final String tempMin;
+  final String tempMax;
+
+  ForecastData(this.icon, this.tempMin, this.tempMax);
 }

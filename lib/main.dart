@@ -30,7 +30,6 @@ class _LocaltionInfo extends State<LocationInfo> {
   List<StateBr> states = [];
   List<CityBr> cities = [];
   List<WeatherForecast> forecasts = [];
-
   Future<List<StateBr>> futureStates;
   Future<List<CityBr>> futureCities;
   Future<List<WeatherForecast>> futureForecasts;
@@ -97,40 +96,51 @@ class _LocaltionInfo extends State<LocationInfo> {
   }
 
   Future<List<WeatherForecast>> fetchForecasts(int idCity) async {
+    final List<String> dayShifts = [
+      "Morning",
+      "Afternoon",
+      "Night",
+      "day-long",
+    ];
     final response = await http.get(Uri.https(
       "apiprevmet3.inmet.gov.br",
       "previsao/" + idCity.toString(),
     ));
 
     if (response.statusCode == 200) {
-      List<WeatherForecast> forecastList = [];
       Map<String, dynamic> json = jsonDecode(response.body);
+      Map<String, dynamic> json2 = json.values.toList()[0];
+      List<WeatherForecast> weatherForecasts = [];
+      List<String> forecastDates = json.values.toList()[0].keys.toList();
 
-      for (var i = 0; i < 3; i++) {
-        Map<String, dynamic> fcjson =
-            json.values.toList()[0].values.toList()[0].values.toList()[i];
-        WeatherForecast wfc = WeatherForecast.fromJson(fcjson);
+      forecastDates.forEach((forecastDate) {
+        WeatherForecast weatherForecast =
+            WeatherForecast(DateFormat('dd/MM/yyyy').parse(forecastDate));
 
-        switch (i) {
-          case 0:
-            wfc.dayShift = "Morning";
-            break;
-          case 1:
-            wfc.dayShift = "Afternoon";
-            break;
-          case 2:
-            wfc.dayShift = "Night";
-            break;
+        List<String> keys = json2[forecastDate].keys.toList();
+
+        if (keys.length == 3) {
+          keys.asMap().forEach((index, key) {
+            DayshiftWeatherForecast dayshiftWeatherForecast =
+                DayshiftWeatherForecast.fromJson((json2[forecastDate])[key]);
+            dayshiftWeatherForecast.dayShift = dayShifts[index];
+            weatherForecast.dayshiftWeatherForecasts
+                .add(dayshiftWeatherForecast);
+          });
+        } else {
+          DayshiftWeatherForecast dayshiftWeatherForecast =
+              DayshiftWeatherForecast.fromJson((json2[forecastDate]));
+          dayshiftWeatherForecast.dayShift = dayShifts[3]; //day-long dayshift
+          weatherForecast.dayshiftWeatherForecasts.add(dayshiftWeatherForecast);
         }
-
-        forecastList.add(wfc);
-      }
-
-      setState(() {
-        forecasts = forecastList;
+        weatherForecasts.add(weatherForecast);
       });
 
-      return forecastList;
+      setState(() {
+        forecasts = weatherForecasts;
+      });
+
+      return weatherForecasts;
     } else {
       throw Exception('Failed to load');
     }
@@ -180,37 +190,59 @@ class _LocaltionInfo extends State<LocationInfo> {
                       futureForecasts = fetchForecasts(value);
                     },
                   ),
-                  Card(
-                    child: Padding(
-                        padding: EdgeInsets.only(top: 8.0, bottom: 16.0),
-                        child: Column(
-                          children: [
-                            TitleWeatherForecastWidget(
-                              date: DateTime.now(),
-                              stateInitials: this.selectedState.initials,
-                              cityName: this.selectedCity.name,
-                            ),
-                            // ListTile(
-                            //   title: Text("Monday"),
-                            //   subtitle: Text("22nd March 2021, Salvador - BA"),
-                            // ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                for (int index = 0;
-                                    index < snapshot.data.length;
-                                    index++)
-                                  WeatherForecastWidget(
-                                    dayShift: snapshot.data[index].dayShift,
-                                    tempMax: snapshot.data[index].tempMax,
-                                    tempMin: snapshot.data[index].tempMin,
-                                    iconBase64: snapshot.data[index].iconBase64,
-                                  )
-                              ],
-                            ),
-                          ],
-                        )),
-                  ),
+                  Column(
+                    children: [
+                      for (int index = 0; index < snapshot.data.length; index++)
+                        Card(
+                          child: Padding(
+                              padding: EdgeInsets.only(top: 8.0, bottom: 16.0),
+                              child: Column(
+                                children: [
+                                  TitleWeatherForecastWidget(
+                                    date: snapshot.data[index].date,
+                                    stateInitials: this.selectedState.initials,
+                                    cityName: this.selectedCity.name,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      for (int dayshifIndex = 0;
+                                          dayshifIndex <
+                                              snapshot
+                                                  .data[index]
+                                                  .dayshiftWeatherForecasts
+                                                  .length;
+                                          dayshifIndex++)
+                                        WeatherForecastWidget(
+                                          dayShift: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .dayShift,
+                                          tempMax: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .tempMax,
+                                          tempMin: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .tempMin,
+                                          iconBase64: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .iconBase64,
+                                        )
+                                    ],
+                                  ),
+                                ],
+                              )),
+                        ),
+                    ],
+                  )
                 ],
               ),
             );
@@ -308,16 +340,36 @@ class CityBr {
 }
 
 class WeatherForecast {
+  final DateTime date;
+  List<DayshiftWeatherForecast> dayshiftWeatherForecasts = [];
+
+  WeatherForecast(this.date);
+
+  @override
+  String toString() {
+    String strDayshiftWeatherForecast = " { ";
+    dayshiftWeatherForecasts.forEach((element) {
+      strDayshiftWeatherForecast += element.toString() + ",";
+    });
+    strDayshiftWeatherForecast += " }";
+
+    return DateFormat(DateFormat.YEAR_ABBR_MONTH_DAY, 'en_US').format(date) +
+        strDayshiftWeatherForecast;
+  }
+}
+
+class DayshiftWeatherForecast {
   String dayShift;
   final String iconBase64;
   final int tempMin;
   final int tempMax;
   final String tempUnit = "ºC";
 
-  WeatherForecast({this.dayShift, this.iconBase64, this.tempMin, this.tempMax});
+  DayshiftWeatherForecast(
+      {this.dayShift, this.iconBase64, this.tempMin, this.tempMax});
 
-  factory WeatherForecast.fromJson(Map<String, dynamic> json) {
-    return WeatherForecast(
+  factory DayshiftWeatherForecast.fromJson(Map<String, dynamic> json) {
+    return DayshiftWeatherForecast(
       tempMin: json['temp_min'],
       tempMax: json['temp_max'],
       iconBase64: json['icone'].replaceAll('data:image/png;base64,', ''),

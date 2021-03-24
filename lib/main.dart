@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(WeatherForecastBrazil());
@@ -180,36 +180,36 @@ class _LocaltionInfo extends State<LocationInfo> {
                       futureForecasts = fetchForecasts(value);
                     },
                   ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 200.0,
-                      child: ListView.builder(
-                          padding: EdgeInsets.all(8),
-                          itemCount: snapshot.data.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Card(
-                              child: Column(
-                                children: [
-                                  ListTile(
-                                    title: Text(snapshot.data[index].dayShift),
-                                    subtitle: Text(snapshot.data[index].tempMin
-                                            .toString() +
-                                        "-" +
-                                        snapshot.data[index].tempMax
-                                            .toString() +
-                                        " " +
-                                        snapshot.data[index].tempUnit),
-                                    leading: Image.memory(
-                                      base64.decode(
-                                          snapshot.data[index].iconBase64),
-                                      fit: BoxFit.contain,
-                                    ),
+                  Card(
+                    child: Padding(
+                        padding: EdgeInsets.only(top: 8.0, bottom: 16.0),
+                        child: Column(
+                          children: [
+                            TitleWeatherForecastWidget(
+                              date: DateTime.now(),
+                              stateInitials: this.selectedState.initials,
+                              cityName: this.selectedCity.name,
+                            ),
+                            // ListTile(
+                            //   title: Text("Monday"),
+                            //   subtitle: Text("22nd March 2021, Salvador - BA"),
+                            // ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                for (int index = 0;
+                                    index < snapshot.data.length;
+                                    index++)
+                                  WeatherForecastWidget(
+                                    dayShift: snapshot.data[index].dayShift,
+                                    tempMax: snapshot.data[index].tempMax,
+                                    tempMin: snapshot.data[index].tempMin,
+                                    iconBase64: snapshot.data[index].iconBase64,
                                   )
-                                ],
-                              ),
-                            );
-                          }),
-                    ),
+                              ],
+                            ),
+                          ],
+                        )),
                   ),
                 ],
               ),
@@ -227,103 +227,38 @@ class _LocaltionInfo extends State<LocationInfo> {
             ),
           );
         });
-
-    // return Column(
-    //   children: [
-    //     DropdownButtonFormField(
-    //       decoration: InputDecoration(
-    //         labelText: 'State',
-    //       ),
-    //       value: selectedState.id,
-    //       items: states
-    //           .map((e) => DropdownMenuItem(
-    //                 key: Key(e.id.toString()),
-    //                 child: Text(e.name),
-    //                 value: e.id,
-    //               ))
-    //           .toList(),
-    //       onChanged: (value) {
-    //         debugPrint(value.toString());
-    //       },
-    //     ),
-    //     DropdownButtonFormField(
-    //       decoration: InputDecoration(
-    //         labelText: 'City',
-    //       ),
-    //       value: selectedCity.id,
-    //       items: citiesBA
-    //           .map((e) => DropdownMenuItem(
-    //                 key: Key(e.id.toString()),
-    //                 child: Text(e.name),
-    //                 value: e.id,
-    //               ))
-    //           .toList(),
-    //       onChanged: (value) {
-    //         debugPrint(value.toString());
-    //       },
-    //     ),
-    //     Padding(
-    //       padding: EdgeInsets.only(top: 16.0, bottom: 16.0),
-    //       child: Card(
-    //         clipBehavior: Clip.antiAlias,
-    //         child: Column(
-    //           children: [
-    //             ListTile(
-    //               title: Text("Monday"),
-    //               subtitle: Text("22nd March 2021, Salvador - BA"),
-    //             ),
-    //             Padding(
-    //               padding: EdgeInsets.only(top: 16.0, bottom: 24.0),
-    //               child: Row(
-    //                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-    //                 children: [
-    //                   Column(children: [
-    //                     ForecastBigLayout(
-    //                       'Morning',
-    //                       ssaForecast
-    //                           .first.dayShiftForecastData.first.iconFinal,
-    //                       ssaForecast.first.dayShiftForecastData.first.tempMin,
-    //                       ssaForecast.first.dayShiftForecastData.first.tempMax,
-    //                     ),
-    //                   ]),
-    //                   Column(children: [
-    //                     ForecastBigLayout(
-    //                       'Afternoon',
-    //                       ssaForecast
-    //                           .first.dayShiftForecastData.first.iconFinal,
-    //                       ssaForecast.first.dayShiftForecastData.first.tempMin,
-    //                       ssaForecast.first.dayShiftForecastData.first.tempMax,
-    //                     ),
-    //                   ]),
-    //                   Column(children: [
-    //                     ForecastBigLayout(
-    //                       'Night',
-    //                       ssaForecast
-    //                           .first.dayShiftForecastData.first.iconFinal,
-    //                       ssaForecast.first.dayShiftForecastData.first.tempMin,
-    //                       ssaForecast.first.dayShiftForecastData.first.tempMax,
-    //                     ),
-    //                   ]),
-    //                 ],
-    //               ),
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //   ],
-    // );
   }
 }
 
-class ForecastBigLayout extends StatelessWidget {
+class TitleWeatherForecastWidget extends StatelessWidget {
+  final DateTime date;
+  final String cityName;
+  final String stateInitials;
+
+  TitleWeatherForecastWidget({this.date, this.cityName, this.stateInitials});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(DateFormat(DateFormat.WEEKDAY, 'en_US').format(date)),
+      subtitle: Text(DateFormat(DateFormat.YEAR_MONTH_DAY).format(date) +
+          ". " +
+          this.cityName +
+          ' - ' +
+          this.stateInitials),
+    );
+  }
+}
+
+class WeatherForecastWidget extends StatelessWidget {
   final String dayShift;
   final String iconBase64;
-  final String tempMin;
-  final String tempMax;
+  final int tempMin;
+  final int tempMax;
   final String tempUnit = "ºC";
 
-  ForecastBigLayout(this.dayShift, this.iconBase64, this.tempMin, this.tempMax);
+  WeatherForecastWidget(
+      {this.dayShift, this.iconBase64, this.tempMin, this.tempMax});
 
   @override
   Widget build(BuildContext context) {
@@ -333,7 +268,11 @@ class ForecastBigLayout extends StatelessWidget {
         base64.decode(this.iconBase64),
         fit: BoxFit.contain,
       ),
-      Text(this.tempMin + ' - ' + this.tempMax + ' ' + this.tempUnit),
+      Text(this.tempMin.toString() +
+          ' - ' +
+          this.tempMax.toString() +
+          ' ' +
+          this.tempUnit),
     ]);
   }
 }

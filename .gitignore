@@ -30,6 +30,8 @@
 .pub-cache/
 .pub/
 /build/
+#Except for deploy on vercel
+!/build/web
 
 # Web related
 lib/generated_plugin_registrant.dart

@@ -171,6 +171,10 @@ class _LocaltionInfo extends State<LocationInfo> {
                             ))
                         .toList(),
                     onChanged: (value) {
+                      setState(() {
+                        selectedState =
+                            states.firstWhere((element) => element.id == value);
+                      });
                       futureCities = fetchCities(value);
                     },
                   ),

@@ -190,59 +190,69 @@ class _LocaltionInfo extends State<LocationInfo> {
                       futureForecasts = fetchForecasts(value);
                     },
                   ),
-                  Column(
-                    children: [
-                      for (int index = 0; index < snapshot.data.length; index++)
-                        Card(
-                          child: Padding(
-                              padding: EdgeInsets.only(top: 8.0, bottom: 16.0),
-                              child: Column(
-                                children: [
-                                  TitleWeatherForecastWidget(
-                                    date: snapshot.data[index].date,
-                                    stateInitials: this.selectedState.initials,
-                                    cityName: this.selectedCity.name,
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                  Expanded(
+                    child: SizedBox(
+                      height: 100.0,
+                      child: ListView(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        children: [
+                          for (int index = 0;
+                              index < snapshot.data.length;
+                              index++)
+                            Card(
+                              child: Padding(
+                                  padding:
+                                      EdgeInsets.only(top: 8.0, bottom: 16.0),
+                                  child: Column(
                                     children: [
-                                      for (int dayshifIndex = 0;
-                                          dayshifIndex <
-                                              snapshot
+                                      TitleWeatherForecastWidget(
+                                        date: snapshot.data[index].date,
+                                        stateInitials:
+                                            this.selectedState.initials,
+                                        cityName: this.selectedCity.name,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          for (int dayshifIndex = 0;
+                                              dayshifIndex <
+                                                  snapshot
+                                                      .data[index]
+                                                      .dayshiftWeatherForecasts
+                                                      .length;
+                                              dayshifIndex++)
+                                            WeatherForecastWidget(
+                                              dayShift: snapshot
                                                   .data[index]
-                                                  .dayshiftWeatherForecasts
-                                                  .length;
-                                          dayshifIndex++)
-                                        WeatherForecastWidget(
-                                          dayShift: snapshot
-                                              .data[index]
-                                              .dayshiftWeatherForecasts[
-                                                  dayshifIndex]
-                                              .dayShift,
-                                          tempMax: snapshot
-                                              .data[index]
-                                              .dayshiftWeatherForecasts[
-                                                  dayshifIndex]
-                                              .tempMax,
-                                          tempMin: snapshot
-                                              .data[index]
-                                              .dayshiftWeatherForecasts[
-                                                  dayshifIndex]
-                                              .tempMin,
-                                          iconBase64: snapshot
-                                              .data[index]
-                                              .dayshiftWeatherForecasts[
-                                                  dayshifIndex]
-                                              .iconBase64,
-                                        )
+                                                  .dayshiftWeatherForecasts[
+                                                      dayshifIndex]
+                                                  .dayShift,
+                                              tempMax: snapshot
+                                                  .data[index]
+                                                  .dayshiftWeatherForecasts[
+                                                      dayshifIndex]
+                                                  .tempMax,
+                                              tempMin: snapshot
+                                                  .data[index]
+                                                  .dayshiftWeatherForecasts[
+                                                      dayshifIndex]
+                                                  .tempMin,
+                                              iconBase64: snapshot
+                                                  .data[index]
+                                                  .dayshiftWeatherForecasts[
+                                                      dayshifIndex]
+                                                  .iconBase64,
+                                            )
+                                        ],
+                                      ),
                                     ],
-                                  ),
-                                ],
-                              )),
-                        ),
-                    ],
-                  )
+                                  )),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );

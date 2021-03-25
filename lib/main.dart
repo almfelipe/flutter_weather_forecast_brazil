@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter_weather_forecast_brazil/StateBr.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';

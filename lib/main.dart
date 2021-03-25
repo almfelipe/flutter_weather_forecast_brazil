@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_weather_forecast_brazil/StateBr.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -158,47 +159,53 @@ class _LocaltionInfo extends State<LocationInfo> {
               padding: EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  DropdownButtonFormField(
-                    decoration: InputDecoration(
-                      labelText: 'State',
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 24.0),
+                    child: Column(
+                      children: [
+                        DropdownButtonFormField(
+                          decoration: InputDecoration(
+                            labelText: 'State',
+                          ),
+                          value: selectedState.id,
+                          items: states
+                              .map((e) => DropdownMenuItem(
+                                    key: Key(e.id.toString()),
+                                    child: Text(e.name),
+                                    value: e.id,
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedState = states
+                                  .firstWhere((element) => element.id == value);
+                            });
+                            futureCities = fetchCities(value);
+                          },
+                        ),
+                        DropdownButtonFormField(
+                          decoration: InputDecoration(
+                            labelText: 'City',
+                          ),
+                          value: selectedCity.id,
+                          items: cities
+                              .map((e) => DropdownMenuItem(
+                                    key: Key(e.id.toString()),
+                                    child: Text(e.name),
+                                    value: e.id,
+                                  ))
+                              .toList(),
+                          onChanged: (value) {
+                            futureForecasts = fetchForecasts(value);
+                          },
+                        ),
+                      ],
                     ),
-                    value: selectedState.id,
-                    items: states
-                        .map((e) => DropdownMenuItem(
-                              key: Key(e.id.toString()),
-                              child: Text(e.name),
-                              value: e.id,
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedState =
-                            states.firstWhere((element) => element.id == value);
-                      });
-                      futureCities = fetchCities(value);
-                    },
-                  ),
-                  DropdownButtonFormField(
-                    decoration: InputDecoration(
-                      labelText: 'City',
-                    ),
-                    value: selectedCity.id,
-                    items: cities
-                        .map((e) => DropdownMenuItem(
-                              key: Key(e.id.toString()),
-                              child: Text(e.name),
-                              value: e.id,
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      futureForecasts = fetchForecasts(value);
-                    },
                   ),
                   Expanded(
                     child: SizedBox(
                       height: 100.0,
                       child: ListView(
-                        padding: const EdgeInsets.only(top: 16.0),
                         children: [
                           for (int index = 0;
                               index < snapshot.data.length;

@@ -3,10 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
-import 'src/models/StateBr.dart';
-import 'src/models/CityBr.dart';
-import 'src/models/WeatherForecast.dart';
-import 'src/models/DayshiftWeatherForecast.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/StateBr.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/CityBr.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/WeatherForecast.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/DayshiftWeatherForecast.dart';
+import 'package:flutter_weather_forecast_brazil/src/services/ibge/locality/Locality.dart';
 
 void main() => runApp(WeatherForecastBrazil());
 
@@ -39,7 +40,7 @@ class _LocaltionInfo extends State<LocationInfo> {
   @override
   void initState() {
     super.initState();
-    fetchStates().then((value) => futureStateBrCallback(value));
+    Locality().getStates().then((value) => futureStateBrCallback(value));
   }
 
   void futureStateBrCallback(List<StateBr> list) {
@@ -49,7 +50,9 @@ class _LocaltionInfo extends State<LocationInfo> {
       _selectedState = list[0];
     });
 
-    fetchCities(_selectedState.id).then((value) => futureCityBrCallback(value));
+    Locality()
+        .getCities(_selectedState.id)
+        .then((value) => futureCityBrCallback(value));
   }
 
   void futureCityBrCallback(List<CityBr> list) {
@@ -62,46 +65,46 @@ class _LocaltionInfo extends State<LocationInfo> {
     _futureWeatherForecasts = fetchForecasts(_selectedCity.id);
   }
 
-  Future<List<StateBr>> fetchStates() async {
-    final response = await http.get(Uri.https(
-      "servicodados.ibge.gov.br",
-      "api/v1/localidades/estados",
-      {"orderBy": "nome"},
-    ));
+  // Future<List<StateBr>> fetchStates() async {
+  //   final response = await http.get(Uri.https(
+  //     "servicodados.ibge.gov.br",
+  //     "api/v1/localidades/estados",
+  //     {"orderBy": "nome"},
+  //   ));
 
-    if (response.statusCode == 200) {
-      List<dynamic> jsonList = jsonDecode(response.body);
-      List<StateBr> stateList = [];
+  //   if (response.statusCode == 200) {
+  //     List<dynamic> jsonList = jsonDecode(response.body);
+  //     List<StateBr> stateList = [];
 
-      jsonList.forEach((element) {
-        stateList.add(StateBr.fromJson(element));
-      });
+  //     jsonList.forEach((element) {
+  //       stateList.add(StateBr.fromJson(element));
+  //     });
 
-      return stateList;
-    } else {
-      throw Exception('Failed to load');
-    }
-  }
+  //     return stateList;
+  //   } else {
+  //     throw Exception('Failed to load');
+  //   }
+  // }
 
-  Future<List<CityBr>> fetchCities(int idStateBr) async {
-    final response = await http.get(Uri.https(
-        "servicodados.ibge.gov.br",
-        "api/v1/localidades/estados/" + idStateBr.toString() + "/municipios",
-        {"orderBy": "nome"}));
+  // Future<List<CityBr>> fetchCities(int idStateBr) async {
+  //   final response = await http.get(Uri.https(
+  //       "servicodados.ibge.gov.br",
+  //       "api/v1/localidades/estados/" + idStateBr.toString() + "/municipios",
+  //       {"orderBy": "nome"}));
 
-    if (response.statusCode == 200) {
-      List<dynamic> jsonList = jsonDecode(response.body);
-      List<CityBr> cityList = [];
+  //   if (response.statusCode == 200) {
+  //     List<dynamic> jsonList = jsonDecode(response.body);
+  //     List<CityBr> cityList = [];
 
-      jsonList.forEach((element) {
-        cityList.add(CityBr.fromJson(element));
-      });
+  //     jsonList.forEach((element) {
+  //       cityList.add(CityBr.fromJson(element));
+  //     });
 
-      return cityList;
-    } else {
-      throw Exception('Failed to load');
-    }
-  }
+  //     return cityList;
+  //   } else {
+  //     throw Exception('Failed to load');
+  //   }
+  // }
 
   Future<List<WeatherForecast>> fetchForecasts(int idCity) async {
     final List<String> dayShifts = [
@@ -183,7 +186,8 @@ class _LocaltionInfo extends State<LocationInfo> {
                               _selectedState = _states
                                   .firstWhere((element) => element.id == value);
                             });
-                            fetchCities(value)
+                            Locality()
+                                .getCities(value)
                                 .then((value) => futureCityBrCallback(value));
                           },
                         ),

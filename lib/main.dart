@@ -3,6 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
+import 'src/models/StateBr.dart';
+import 'src/models/CityBr.dart';
+import 'src/models/WeatherForecast.dart';
+import 'src/models/DayshiftWeatherForecast.dart';
+
 void main() => runApp(WeatherForecastBrazil());
 
 class WeatherForecastBrazil extends StatelessWidget {
@@ -29,14 +34,11 @@ class _LocaltionInfo extends State<LocationInfo> {
   CityBr _selectedCity;
   List<StateBr> _states = [];
   List<CityBr> _cities = [];
-  //List<WeatherForecast> _weatherForecasts = [];
   Future<List<WeatherForecast>> _futureWeatherForecasts;
 
   @override
   void initState() {
     super.initState();
-    //futureStates = fetchStates();
-
     fetchStates().then((value) => futureStateBrCallback(value));
   }
 
@@ -333,78 +335,5 @@ class WeatherForecastWidget extends StatelessWidget {
           ' ' +
           this.tempUnit),
     ]);
-  }
-}
-
-class StateBr {
-  final int id;
-  final String initials;
-  final String name;
-
-  StateBr({this.id, this.initials, this.name});
-
-  factory StateBr.fromJson(Map<String, dynamic> json) {
-    return StateBr(
-      id: json['id'],
-      initials: json['sigla'],
-      name: json['nome'],
-    );
-  }
-}
-
-class CityBr {
-  final int id;
-  final String name;
-
-  CityBr({this.id, this.name});
-
-  factory CityBr.fromJson(Map<String, dynamic> json) {
-    return CityBr(
-      id: json['id'],
-      name: json['nome'],
-    );
-  }
-}
-
-class WeatherForecast {
-  final DateTime date;
-  List<DayshiftWeatherForecast> dayshiftWeatherForecasts = [];
-
-  WeatherForecast(this.date);
-
-  @override
-  String toString() {
-    String strDayshiftWeatherForecast = " { ";
-    dayshiftWeatherForecasts.forEach((element) {
-      strDayshiftWeatherForecast += element.toString() + ",";
-    });
-    strDayshiftWeatherForecast += " }";
-
-    return DateFormat(DateFormat.YEAR_ABBR_MONTH_DAY, 'en_US').format(date) +
-        strDayshiftWeatherForecast;
-  }
-}
-
-class DayshiftWeatherForecast {
-  String dayShift;
-  final String iconBase64;
-  final int tempMin;
-  final int tempMax;
-  final String tempUnit = "ºC";
-
-  DayshiftWeatherForecast(
-      {this.dayShift, this.iconBase64, this.tempMin, this.tempMax});
-
-  factory DayshiftWeatherForecast.fromJson(Map<String, dynamic> json) {
-    return DayshiftWeatherForecast(
-      tempMin: json['temp_min'],
-      tempMax: json['temp_max'],
-      iconBase64: json['icone'].replaceAll('data:image/png;base64,', ''),
-    );
-  }
-
-  @override
-  String toString() {
-    return "dayShift: $dayShift tempMin: $tempMin tempMax: $tempMax tempUnit: $tempUnit";
   }
 }

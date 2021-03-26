@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_weather_forecast_brazil/src/models/StateBr.dart';
 import 'package:flutter_weather_forecast_brazil/src/models/CityBr.dart';
 
-class Locality {
+class LocalityService {
   final String _apiHost = "servicodados.ibge.gov.br";
   final String _apiBaseEndpoint = "api/v1/localidades/";
 

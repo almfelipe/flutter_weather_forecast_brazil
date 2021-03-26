@@ -25,19 +25,39 @@ class LocationInfo extends StatefulWidget {
 }
 
 class _LocaltionInfo extends State<LocationInfo> {
-  StateBr selectedState;
-  CityBr selectedCity;
-  List<StateBr> states = [];
-  List<CityBr> cities = [];
-  List<WeatherForecast> forecasts = [];
-  Future<List<StateBr>> futureStates;
-  Future<List<CityBr>> futureCities;
-  Future<List<WeatherForecast>> futureForecasts;
+  StateBr _selectedState;
+  CityBr _selectedCity;
+  List<StateBr> _states = [];
+  List<CityBr> _cities = [];
+  //List<WeatherForecast> _weatherForecasts = [];
+  Future<List<WeatherForecast>> _futureWeatherForecasts;
 
   @override
   void initState() {
     super.initState();
-    futureStates = fetchStates();
+    //futureStates = fetchStates();
+
+    fetchStates().then((value) => futureStateBrCallback(value));
+  }
+
+  void futureStateBrCallback(List<StateBr> list) {
+    debugPrint("States carregado");
+    setState(() {
+      _states = list;
+      _selectedState = list[0];
+    });
+
+    fetchCities(_selectedState.id).then((value) => futureCityBrCallback(value));
+  }
+
+  void futureCityBrCallback(List<CityBr> list) {
+    debugPrint("Ciites carregado");
+    setState(() {
+      _cities = list;
+      _selectedCity = list[0];
+    });
+
+    _futureWeatherForecasts = fetchForecasts(_selectedCity.id);
   }
 
   Future<List<StateBr>> fetchStates() async {
@@ -54,13 +74,6 @@ class _LocaltionInfo extends State<LocationInfo> {
       jsonList.forEach((element) {
         stateList.add(StateBr.fromJson(element));
       });
-
-      setState(() {
-        states = stateList;
-        selectedState = stateList[0];
-      });
-
-      futureCities = fetchCities(selectedState.id);
 
       return stateList;
     } else {
@@ -81,13 +94,6 @@ class _LocaltionInfo extends State<LocationInfo> {
       jsonList.forEach((element) {
         cityList.add(CityBr.fromJson(element));
       });
-
-      setState(() {
-        cities = cityList;
-        selectedCity = cityList[0];
-      });
-
-      futureForecasts = fetchForecasts(selectedCity.id);
 
       return cityList;
     } else {
@@ -136,10 +142,6 @@ class _LocaltionInfo extends State<LocationInfo> {
         weatherForecasts.add(weatherForecast);
       });
 
-      setState(() {
-        forecasts = weatherForecasts;
-      });
-
       return weatherForecasts;
     } else {
       throw Exception('Failed to load');
@@ -151,7 +153,7 @@ class _LocaltionInfo extends State<LocationInfo> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<WeatherForecast>>(
-        future: futureForecasts,
+        future: _futureWeatherForecasts,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Padding(
@@ -166,8 +168,8 @@ class _LocaltionInfo extends State<LocationInfo> {
                           decoration: InputDecoration(
                             labelText: 'State',
                           ),
-                          value: selectedState.id,
-                          items: states
+                          value: _selectedState.id,
+                          items: _states
                               .map((e) => DropdownMenuItem(
                                     key: Key(e.id.toString()),
                                     child: Text(e.name),
@@ -176,18 +178,19 @@ class _LocaltionInfo extends State<LocationInfo> {
                               .toList(),
                           onChanged: (value) {
                             setState(() {
-                              selectedState = states
+                              _selectedState = _states
                                   .firstWhere((element) => element.id == value);
                             });
-                            futureCities = fetchCities(value);
+                            fetchCities(value)
+                                .then((value) => futureCityBrCallback(value));
                           },
                         ),
                         DropdownButtonFormField(
                           decoration: InputDecoration(
                             labelText: 'City',
                           ),
-                          value: selectedCity.id,
-                          items: cities
+                          value: _selectedCity.id,
+                          items: _cities
                               .map((e) => DropdownMenuItem(
                                     key: Key(e.id.toString()),
                                     child: Text(e.name),
@@ -196,10 +199,10 @@ class _LocaltionInfo extends State<LocationInfo> {
                               .toList(),
                           onChanged: (value) {
                             setState(() {
-                              selectedCity = cities
+                              _selectedCity = _cities
                                   .firstWhere((element) => element.id == value);
                             });
-                            futureForecasts = fetchForecasts(value);
+                            _futureWeatherForecasts = fetchForecasts(value);
                           },
                         ),
                       ],
@@ -222,8 +225,8 @@ class _LocaltionInfo extends State<LocationInfo> {
                                       TitleWeatherForecastWidget(
                                         date: snapshot.data[index].date,
                                         stateInitials:
-                                            this.selectedState.initials,
-                                        cityName: this.selectedCity.name,
+                                            this._selectedState.initials,
+                                        cityName: this._selectedCity.name,
                                       ),
                                       Row(
                                         mainAxisAlignment:

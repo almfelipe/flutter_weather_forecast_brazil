@@ -1,13 +1,12 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_weather_forecast_brazil/src/models/StateBr.dart';
 import 'package:flutter_weather_forecast_brazil/src/models/CityBr.dart';
 import 'package:flutter_weather_forecast_brazil/src/models/WeatherForecast.dart';
-import 'package:flutter_weather_forecast_brazil/src/models/DayshiftWeatherForecast.dart';
 import 'package:flutter_weather_forecast_brazil/src/services/ibge/locality/LocalityService.dart';
+import 'package:flutter_weather_forecast_brazil/src/services/inmet/weatherForecast/WeatherForecastService.dart';
 
 void main() => runApp(WeatherForecastBrazil());
 
@@ -44,7 +43,6 @@ class _LocaltionInfo extends State<LocationInfo> {
   }
 
   void futureStateBrCallback(List<StateBr> list) {
-    debugPrint("States carregado");
     setState(() {
       _states = list;
       _selectedState = list[0];
@@ -56,60 +54,13 @@ class _LocaltionInfo extends State<LocationInfo> {
   }
 
   void futureCityBrCallback(List<CityBr> list) {
-    debugPrint("Ciites carregado");
     setState(() {
       _cities = list;
       _selectedCity = list[0];
     });
 
-    _futureWeatherForecasts = fetchForecasts(_selectedCity.id);
-  }
-
-  Future<List<WeatherForecast>> fetchForecasts(int idCity) async {
-    final List<String> dayShifts = [
-      "Morning",
-      "Afternoon",
-      "Night",
-      "day-long",
-    ];
-    final response = await http.get(Uri.https(
-      "apiprevmet3.inmet.gov.br",
-      "previsao/" + idCity.toString(),
-    ));
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> json = jsonDecode(response.body);
-      Map<String, dynamic> json2 = json.values.toList()[0];
-      List<WeatherForecast> weatherForecasts = [];
-      List<String> forecastDates = json.values.toList()[0].keys.toList();
-
-      forecastDates.forEach((forecastDate) {
-        WeatherForecast weatherForecast =
-            WeatherForecast(DateFormat('dd/MM/yyyy').parse(forecastDate));
-
-        List<String> keys = json2[forecastDate].keys.toList();
-
-        if (keys.length == 3) {
-          keys.asMap().forEach((index, key) {
-            DayshiftWeatherForecast dayshiftWeatherForecast =
-                DayshiftWeatherForecast.fromJson((json2[forecastDate])[key]);
-            dayshiftWeatherForecast.dayShift = dayShifts[index];
-            weatherForecast.dayshiftWeatherForecasts
-                .add(dayshiftWeatherForecast);
-          });
-        } else {
-          DayshiftWeatherForecast dayshiftWeatherForecast =
-              DayshiftWeatherForecast.fromJson((json2[forecastDate]));
-          dayshiftWeatherForecast.dayShift = dayShifts[3]; //day-long dayshift
-          weatherForecast.dayshiftWeatherForecasts.add(dayshiftWeatherForecast);
-        }
-        weatherForecasts.add(weatherForecast);
-      });
-
-      return weatherForecasts;
-    } else {
-      throw Exception('Failed to load');
-    }
+    _futureWeatherForecasts =
+        WeatherForecastService().getWeatherForecast(_selectedCity.id);
   }
 
   _LocaltionInfo() : super();
@@ -167,7 +118,8 @@ class _LocaltionInfo extends State<LocationInfo> {
                               _selectedCity = _cities
                                   .firstWhere((element) => element.id == value);
                             });
-                            _futureWeatherForecasts = fetchForecasts(value);
+                            _futureWeatherForecasts = WeatherForecastService()
+                                .getWeatherForecast(value);
                           },
                         ),
                       ],

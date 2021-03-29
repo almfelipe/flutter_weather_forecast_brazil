@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flutter_weather_forecast_brazil/src/models/StateBr.dart';
-import 'package:flutter_weather_forecast_brazil/src/models/CityBr.dart';
-import 'package:flutter_weather_forecast_brazil/src/models/WeatherForecast.dart';
-import 'package:flutter_weather_forecast_brazil/src/services/ibge/locality/LocalityService.dart';
-import 'package:flutter_weather_forecast_brazil/src/services/inmet/weatherForecast/WeatherForecastService.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/state_br.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/city_br.dart';
+import 'package:flutter_weather_forecast_brazil/src/models/weather_forecast.dart';
+import 'package:flutter_weather_forecast_brazil/src/services/ibge/locality/locality_service.dart';
+import 'package:flutter_weather_forecast_brazil/src/services/inmet/weatherForecast/weather_forecast_service.dart';
 
 void main() => runApp(WeatherForecastBrazil());
 

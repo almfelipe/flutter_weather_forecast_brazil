@@ -39,10 +39,12 @@ class _LocaltionInfo extends State<LocationInfo> {
   @override
   void initState() {
     super.initState();
-    LocalityService().getStates().then((value) => futureStateBrCallback(value));
+    LocalityService()
+        .getStates()
+        .then((value) => _futureStateBrCallback(value));
   }
 
-  void futureStateBrCallback(List<StateBr> list) {
+  void _futureStateBrCallback(List<StateBr> list) {
     setState(() {
       _states = list;
       _selectedState = list[0];
@@ -50,10 +52,10 @@ class _LocaltionInfo extends State<LocationInfo> {
 
     LocalityService()
         .getCities(_selectedState.id)
-        .then((value) => futureCityBrCallback(value));
+        .then((value) => _futureCityBrCallback(value));
   }
 
-  void futureCityBrCallback(List<CityBr> list) {
+  void _futureCityBrCallback(List<CityBr> list) {
     setState(() {
       _cities = list;
       _selectedCity = list[0];
@@ -98,7 +100,7 @@ class _LocaltionInfo extends State<LocationInfo> {
                             });
                             LocalityService()
                                 .getCities(value)
-                                .then((value) => futureCityBrCallback(value));
+                                .then((value) => _futureCityBrCallback(value));
                           },
                         ),
                         DropdownButtonFormField(

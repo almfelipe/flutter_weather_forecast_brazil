@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter_weather_forecast_brazil/src/views/components/info_weather_forecast.dart';
+import 'package:flutter_weather_forecast_brazil/src/views/components/title_weather_forecast.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
@@ -141,7 +143,7 @@ class _LocaltionInfo extends State<LocationInfo> {
                                       EdgeInsets.only(top: 8.0, bottom: 16.0),
                                   child: Column(
                                     children: [
-                                      TitleWeatherForecastWidget(
+                                      TitleWeatherForecast(
                                         date: snapshot.data[index].date,
                                         stateInitials:
                                             this._selectedState.initials,
@@ -158,7 +160,7 @@ class _LocaltionInfo extends State<LocationInfo> {
                                                       .dayshiftWeatherForecasts
                                                       .length;
                                               dayshifIndex++)
-                                            WeatherForecastWidget(
+                                            InfoWeatherForecast(
                                               dayShift: snapshot
                                                   .data[index]
                                                   .dayshiftWeatherForecasts[
@@ -205,52 +207,5 @@ class _LocaltionInfo extends State<LocationInfo> {
             ),
           );
         });
-  }
-}
-
-class TitleWeatherForecastWidget extends StatelessWidget {
-  final DateTime date;
-  final String cityName;
-  final String stateInitials;
-
-  TitleWeatherForecastWidget({this.date, this.cityName, this.stateInitials});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(DateFormat(DateFormat.WEEKDAY, 'en_US').format(date)),
-      subtitle: Text(DateFormat(DateFormat.YEAR_MONTH_DAY).format(date) +
-          ". " +
-          this.cityName +
-          ' - ' +
-          this.stateInitials),
-    );
-  }
-}
-
-class WeatherForecastWidget extends StatelessWidget {
-  final String dayShift;
-  final String iconBase64;
-  final int tempMin;
-  final int tempMax;
-  final String tempUnit = "ºC";
-
-  WeatherForecastWidget(
-      {this.dayShift, this.iconBase64, this.tempMin, this.tempMax});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      Text(this.dayShift),
-      Image.memory(
-        base64.decode(this.iconBase64),
-        fit: BoxFit.contain,
-      ),
-      Text(this.tempMin.toString() +
-          ' - ' +
-          this.tempMax.toString() +
-          ' ' +
-          this.tempUnit),
-    ]);
   }
 }

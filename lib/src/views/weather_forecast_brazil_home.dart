@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+
 import 'package:flutter_weather_forecast_brazil/src/models/city_br.dart';
 import 'package:flutter_weather_forecast_brazil/src/models/state_br.dart';
 import 'package:flutter_weather_forecast_brazil/src/models/weather_forecast.dart';
@@ -34,7 +36,6 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
       _states = list;
       _selectedState = list[0];
     });
-
     LocalityService()
         .getCities(_selectedState.id)
         .then((value) => _futureCityBrCallback(value));
@@ -45,9 +46,14 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
       _cities = list;
       _selectedCity = list[0];
     });
-
     _futureWeatherForecasts =
         WeatherForecastService().getWeatherForecast(_selectedCity.id);
+    _futureWeatherForecasts
+        .then((value) => _futureWeatherForecastCallback(value));
+  }
+
+  void _futureWeatherForecastCallback(List<WeatherForecast> list) {
+    EasyLoading.dismiss();
   }
 
   _WeatherForecastBrazilHome() : super();
@@ -55,140 +61,151 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<WeatherForecast>>(
-        future: _futureWeatherForecasts,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 24.0),
-                    child: Column(
+      future: _futureWeatherForecasts,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 24.0),
+                  child: Column(
+                    children: [
+                      DropdownButtonFormField(
+                        decoration: InputDecoration(
+                          labelText: 'State',
+                        ),
+                        value: _selectedState.id,
+                        items: _states
+                            .map((e) => DropdownMenuItem(
+                                  key: Key(e.id.toString()),
+                                  child: Text(e.name),
+                                  value: e.id,
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          EasyLoading.show(status: 'loading...');
+                          setState(() {
+                            _selectedState = _states
+                                .firstWhere((element) => element.id == value);
+                          });
+                          LocalityService()
+                              .getCities(value)
+                              .then((value) => _futureCityBrCallback(value));
+                        },
+                      ),
+                      DropdownButtonFormField(
+                        decoration: InputDecoration(
+                          labelText: 'City',
+                        ),
+                        value: _selectedCity.id,
+                        items: _cities
+                            .map((e) => DropdownMenuItem(
+                                  key: Key(e.id.toString()),
+                                  child: Text(e.name),
+                                  value: e.id,
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          EasyLoading.show(status: 'loading...');
+                          setState(() {
+                            _selectedCity = _cities
+                                .firstWhere((element) => element.id == value);
+                          });
+                          _futureWeatherForecasts = WeatherForecastService()
+                              .getWeatherForecast(value);
+
+                          _futureWeatherForecasts.then(
+                              (value) => _futureWeatherForecastCallback(value));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SizedBox(
+                    height: 100.0,
+                    child: ListView(
                       children: [
-                        DropdownButtonFormField(
-                          decoration: InputDecoration(
-                            labelText: 'State',
+                        for (int index = 0;
+                            index < snapshot.data.length;
+                            index++)
+                          Card(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 8.0, bottom: 16.0),
+                              child: Column(
+                                children: [
+                                  TitleWeatherForecast(
+                                    date: snapshot.data[index].date,
+                                    stateInitials: this._selectedState.initials,
+                                    cityName: this._selectedCity.name,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      for (int dayshifIndex = 0;
+                                          dayshifIndex <
+                                              snapshot
+                                                  .data[index]
+                                                  .dayshiftWeatherForecasts
+                                                  .length;
+                                          dayshifIndex++)
+                                        InfoWeatherForecast(
+                                          dayShift: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .dayShift,
+                                          tempMax: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .tempMax,
+                                          tempMin: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .tempMin,
+                                          iconBase64: snapshot
+                                              .data[index]
+                                              .dayshiftWeatherForecasts[
+                                                  dayshifIndex]
+                                              .iconBase64,
+                                        )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          value: _selectedState.id,
-                          items: _states
-                              .map((e) => DropdownMenuItem(
-                                    key: Key(e.id.toString()),
-                                    child: Text(e.name),
-                                    value: e.id,
-                                  ))
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedState = _states
-                                  .firstWhere((element) => element.id == value);
-                            });
-                            LocalityService()
-                                .getCities(value)
-                                .then((value) => _futureCityBrCallback(value));
-                          },
-                        ),
-                        DropdownButtonFormField(
-                          decoration: InputDecoration(
-                            labelText: 'City',
-                          ),
-                          value: _selectedCity.id,
-                          items: _cities
-                              .map((e) => DropdownMenuItem(
-                                    key: Key(e.id.toString()),
-                                    child: Text(e.name),
-                                    value: e.id,
-                                  ))
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedCity = _cities
-                                  .firstWhere((element) => element.id == value);
-                            });
-                            _futureWeatherForecasts = WeatherForecastService()
-                                .getWeatherForecast(value);
-                          },
-                        ),
                       ],
                     ),
                   ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 100.0,
-                      child: ListView(
-                        children: [
-                          for (int index = 0;
-                              index < snapshot.data.length;
-                              index++)
-                            Card(
-                              child: Padding(
-                                  padding:
-                                      EdgeInsets.only(top: 8.0, bottom: 16.0),
-                                  child: Column(
-                                    children: [
-                                      TitleWeatherForecast(
-                                        date: snapshot.data[index].date,
-                                        stateInitials:
-                                            this._selectedState.initials,
-                                        cityName: this._selectedCity.name,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          for (int dayshifIndex = 0;
-                                              dayshifIndex <
-                                                  snapshot
-                                                      .data[index]
-                                                      .dayshiftWeatherForecasts
-                                                      .length;
-                                              dayshifIndex++)
-                                            InfoWeatherForecast(
-                                              dayShift: snapshot
-                                                  .data[index]
-                                                  .dayshiftWeatherForecasts[
-                                                      dayshifIndex]
-                                                  .dayShift,
-                                              tempMax: snapshot
-                                                  .data[index]
-                                                  .dayshiftWeatherForecasts[
-                                                      dayshifIndex]
-                                                  .tempMax,
-                                              tempMin: snapshot
-                                                  .data[index]
-                                                  .dayshiftWeatherForecasts[
-                                                      dayshifIndex]
-                                                  .tempMin,
-                                              iconBase64: snapshot
-                                                  .data[index]
-                                                  .dayshiftWeatherForecasts[
-                                                      dayshifIndex]
-                                                  .iconBase64,
-                                            )
-                                        ],
-                                      ),
-                                    ],
-                                  )),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Text("Failed to load");
-          }
-
+                ),
+              ],
+            ),
+          );
+        } else if (snapshot.hasError) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(),
+                Text("Failed to load"),
               ],
             ),
           );
-        });
+        }
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

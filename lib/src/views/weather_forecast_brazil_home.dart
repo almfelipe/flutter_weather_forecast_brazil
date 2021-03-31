@@ -56,6 +56,28 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
     EasyLoading.dismiss();
   }
 
+  void _onCityBrChange(idCity) {
+    EasyLoading.show(status: 'loading...');
+    setState(() {
+      _selectedCity = _cities.firstWhere((city) => city.id == idCity);
+    });
+    _futureWeatherForecasts =
+        WeatherForecastService().getWeatherForecast(idCity);
+
+    _futureWeatherForecasts
+        .then((value) => _futureWeatherForecastCallback(value));
+  }
+
+  void _onStateBrChange(idState) {
+    EasyLoading.show(status: 'loading...');
+    setState(() {
+      _selectedState = _states.firstWhere((state) => state.id == idState);
+    });
+    LocalityService()
+        .getCities(idState)
+        .then((value) => _futureCityBrCallback(value));
+  }
+
   _WeatherForecastBrazilHome() : super();
 
   @override
@@ -84,16 +106,7 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
                                   value: e.id,
                                 ))
                             .toList(),
-                        onChanged: (value) {
-                          EasyLoading.show(status: 'loading...');
-                          setState(() {
-                            _selectedState = _states
-                                .firstWhere((element) => element.id == value);
-                          });
-                          LocalityService()
-                              .getCities(value)
-                              .then((value) => _futureCityBrCallback(value));
-                        },
+                        onChanged: (value) => _onStateBrChange(value),
                       ),
                       DropdownButtonFormField(
                         decoration: InputDecoration(
@@ -107,18 +120,7 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
                                   value: e.id,
                                 ))
                             .toList(),
-                        onChanged: (value) {
-                          EasyLoading.show(status: 'loading...');
-                          setState(() {
-                            _selectedCity = _cities
-                                .firstWhere((element) => element.id == value);
-                          });
-                          _futureWeatherForecasts = WeatherForecastService()
-                              .getWeatherForecast(value);
-
-                          _futureWeatherForecasts.then(
-                              (value) => _futureWeatherForecastCallback(value));
-                        },
+                        onChanged: (value) => _onCityBrChange(value),
                       ),
                     ],
                   ),

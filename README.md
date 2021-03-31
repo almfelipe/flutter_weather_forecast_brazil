@@ -25,4 +25,3 @@ flutter packages get
 
 * [INMET weather forecast API](https://portal.inmet.gov.br/manual/manual-de-uso-da-api-de-previs%C3%A3o)
 * [IBGE locality API](https://servicodados.ibge.gov.br/api/docs/localidades)
-* [Flutter EasyLoading](https://pub.dev/packages/flutter_easyloading)

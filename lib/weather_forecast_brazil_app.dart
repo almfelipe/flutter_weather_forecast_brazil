@@ -6,12 +6,7 @@ class WeatherForecastBrazilApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('flutter_weather_forecast_brazil'),
-        ),
-        body: WeatherForecastBrazilHome(),
-      ),
+      home: WeatherForecastBrazilHome(),
     );
   }
 }

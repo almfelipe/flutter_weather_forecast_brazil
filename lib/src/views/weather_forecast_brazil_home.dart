@@ -7,6 +7,7 @@ import 'package:flutter_weather_forecast_brazil/src/services/ibge/locality/local
 import 'package:flutter_weather_forecast_brazil/src/services/inmet/weatherForecast/weather_forecast_service.dart';
 
 import 'package:flutter_weather_forecast_brazil/src/views/components/info_weather_forecast.dart';
+import 'package:flutter_weather_forecast_brazil/src/views/components/nav_bar.dart';
 import 'package:flutter_weather_forecast_brazil/src/views/components/title_weather_forecast.dart';
 import 'package:flutter_weather_forecast_brazil/src/views/weather_forecast_brazil_home_data.dart';
 
@@ -167,22 +168,29 @@ class _WeatherForecastBrazilHome extends State<WeatherForecastBrazilHome> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: BlocProvider<WeatherForecastCubit>(
-        create: (context) =>
-            WeatherForecastCubit(LocalityService(), WeatherForecastService()),
-        child: BlocBuilder<WeatherForecastCubit, WeatherForecastState>(
-          builder: (context, state) {
-            if (state is WeatherForecastLoading) {
-              return buildLoading();
-            } else if (state is WeatherForecastLoaded) {
-              return buildWeather(state.weatherForecastBrazilHomeData, context);
-            } else if (state is WeatherForecastError) {
-              return buildTextMessage(state.message);
-            } else {
-              return buildTextMessage('invalid state');
-            }
-          },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+      ),
+      bottomNavigationBar: NavBar(),
+      body: Container(
+        child: BlocProvider<WeatherForecastCubit>(
+          create: (context) =>
+              WeatherForecastCubit(LocalityService(), WeatherForecastService()),
+          child: BlocBuilder<WeatherForecastCubit, WeatherForecastState>(
+            builder: (context, state) {
+              if (state is WeatherForecastLoading) {
+                return buildLoading();
+              } else if (state is WeatherForecastLoaded) {
+                return buildWeather(
+                    state.weatherForecastBrazilHomeData, context);
+              } else if (state is WeatherForecastError) {
+                return buildTextMessage(state.message);
+              } else {
+                return buildTextMessage('invalid state');
+              }
+            },
+          ),
         ),
       ),
     );

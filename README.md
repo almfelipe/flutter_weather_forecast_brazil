@@ -1,5 +1,5 @@
 # flutter_weather_forecast_brazil
-flutter_weather_forecast_brazil consults APIs from INMET (National Institute of Meteorology) and IBGE (Brazilian Institute of Geography and Statistics) to provide weather forecasts for Brazilian cities. This project was written using a BLoC design pattern. You can access the live demo at this [link](https://flutter-weather-forecast-brazil.vercel.app/#/).
+This App consults APIs from INMET (National Institute of Meteorology) and IBGE (Brazilian Institute of Geography and Statistics) to provide weather forecasts for Brazilian cities. This project uses BLoC design pattern. You can access the live demo at this [link](https://flutter-weather-forecast-brazil.vercel.app/#/).
 
 ### Built with
 * [Flutter](https://flutter.dev)

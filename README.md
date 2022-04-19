@@ -16,6 +16,11 @@ Make sure you have Flutter 2.7.0 installed in your development environment.
 git clone https://github.com/almfelipe/flutter_weather_forecast_brazil.git
 ```
 
+### Go to the project code folder
+```
+cd flutter_weather_forecast_brazil
+```
+
 ### Install all dependencies
 ```
 flutter packages get
